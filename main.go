@@ -14,7 +14,7 @@ import (
 func main() {
 	connectionString := os.Getenv("DATABASE_URL")
 
-	pool, err := database.NewDatabaseInstance(context.Background(), connectionString)
+	pool, err := database.RegisterPool(context.Background(), connectionString)
 
 	if err != nil {
 		log.Fatal(err)

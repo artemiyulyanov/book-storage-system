@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewDatabaseInstance(ctx context.Context, connectionString string) (*pgxpool.Pool, error) {
+func RegisterPool(ctx context.Context, connectionString string) (*pgxpool.Pool, error) {
 	if connectionString == "" {
 		return nil, fmt.Errorf("Could not resolve connectionString at database.NewDatabaseInstance()")
 	}
