@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
+  api:
     build: .
     container_name: book_storage_system_api
     environment:
