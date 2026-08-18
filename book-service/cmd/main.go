@@ -22,6 +22,10 @@ func main() {
 
 	defer pool.Close()
 
+	if err := database.RunMigrations(connectionString, "migrations"); err != nil {
+		log.Fatal(err)
+	}
+
 	r := mux.NewRouter()
 
 	handlers.RegisterBookHandlers(r, pool)
