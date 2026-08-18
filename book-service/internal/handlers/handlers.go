@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"book-service/internal/database/repository"
+	"book-service/internal/models"
 	"book-service/internal/network"
-	"common/models"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -76,7 +76,7 @@ func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	network.RespondJSON(w, http.StatusCreated, map[string]int{"id": id})
+	network.RespondJSON(w, http.StatusCreated, map[string]int64{"id": id})
 }
 
 func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request) {

@@ -54,7 +54,7 @@ func validationMessage(fe validator.FieldError) string {
 	}
 }
 
-func ParseID(r *http.Request) (int, error) {
+func ParseID(r *http.Request) (int64, error) {
 	vars := mux.Vars(r)
-	return strconv.Atoi(vars["id"])
+	return strconv.ParseInt(vars["id"], 10, 64)
 }
