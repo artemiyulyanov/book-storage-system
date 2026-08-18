@@ -1,8 +1,8 @@
 package main
 
 import (
-	"book-service/internal/database"
 	"book-service/internal/handlers"
+	"common/database"
 	"context"
 	"log"
 	"net/http"
