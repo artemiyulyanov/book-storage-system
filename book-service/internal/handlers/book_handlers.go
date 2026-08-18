@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"book-storage-system/internal/database/repositories"
-	"book-storage-system/internal/models"
-	"book-storage-system/internal/network"
+	"book-service/internal/database/repository"
+	"book-service/internal/models"
+	"book-service/internal/network"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -14,7 +14,7 @@ import (
 )
 
 type BookHandlers struct {
-	repo *repositories.BookRepository
+	repo *repository.BookRepository
 }
 
 func (handlers *BookHandlers) getBooks(w http.ResponseWriter, r *http.Request) {
@@ -153,7 +153,7 @@ func (handlers *BookHandlers) registerRoutes(router *mux.Router) {
 }
 
 func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool) *BookHandlers {
-	repo := repositories.NewBookRepository(pool)
+	repo := repository.NewBookRepository(pool)
 
 	handlers := BookHandlers{
 		repo,
