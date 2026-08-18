@@ -43,6 +43,27 @@ func (repo *BookRepository) GetBook(ctx context.Context, id int) (*models.Book, 
 	return &book, nil
 }
 
+func (repo *BookRepository) CreateBook(ctx context.Context, book *models.Book) (int, error) {
+	err := repo.pool.QueryRow(ctx, "INSERT INTO books (title, description, author) VALUES ($1, $2, $3) RETURNING id", book.Title, book.Description, book.Author).
+		Scan(&book.ID)
+
+	if err != nil {
+		return book.ID, err
+	}
+
+	return book.ID, nil
+}
+
+func (repo *BookRepository) DeleteBook(ctx context.Context, id int) (int64, error) {
+	tag, err := repo.pool.Exec(ctx, "DELETE FROM books WHERE id=$1", id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return tag.RowsAffected(), nil
+}
+
 func NewBookRepository(pool *pgxpool.Pool) *BookRepository {
 	return &BookRepository{
 		pool,

@@ -2,7 +2,11 @@ package handlers
 
 import (
 	"book-storage-system/internal/database/repositories"
+	"book-storage-system/internal/models"
 	"book-storage-system/internal/network"
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -39,16 +43,74 @@ func (handlers *BookHandlers) getBook(w http.ResponseWriter, r *http.Request) {
 	book, err := handlers.repo.GetBook(ctx, id)
 
 	if err != nil {
-		network.RespondError(w, http.StatusNotFound, "The book is not found!")
+		if errors.Is(err, sql.ErrNoRows) {
+			network.RespondError(w, http.StatusNotFound, "Book not found!")
+		} else {
+			network.RespondError(w, http.StatusBadRequest, err.Error())
+		}
+
 		return
 	}
 
 	network.RespondJSON(w, http.StatusOK, book)
 }
 
+func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var book *models.Book
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		network.RespondError(w, http.StatusBadRequest, "Incorrect request body!")
+		return
+	}
+
+	if err := network.Validate.Struct(book); err != nil {
+		network.RespondValidationError(w, err)
+		return
+	}
+
+	id, err := handlers.repo.CreateBook(ctx, book)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	network.RespondJSON(w, http.StatusCreated, map[string]int{"id": id})
+}
+
+func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := network.ParseID(r)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, "Incorrect id!")
+		return
+	}
+
+	rowsAffected, err := handlers.repo.DeleteBook(ctx, id)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if rowsAffected == 0 {
+		network.RespondError(w, http.StatusNotFound, "Book not found!")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (handlers *BookHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/books", handlers.getBooks).Methods("GET")
 	router.HandleFunc("/books/{id}", handlers.getBook).Methods("GET")
+
+	router.HandleFunc("/books", handlers.createBook).Methods("POST")
+
+	router.HandleFunc("/books/{id}", handlers.deleteBook).Methods("DELETE")
 }
 
 func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool) *BookHandlers {
