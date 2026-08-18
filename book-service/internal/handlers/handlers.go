@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"book-service/internal/database/repository"
-	"book-service/internal/models"
+	"common/models"
 	"common/network"
 	"database/sql"
 	"encoding/json"

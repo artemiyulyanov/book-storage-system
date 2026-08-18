@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"book-service/internal/models"
+	"common/models"
 	"context"
 
 	"github.com/jackc/pgx/v5"
