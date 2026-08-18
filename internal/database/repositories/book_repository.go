@@ -54,6 +54,16 @@ func (repo *BookRepository) CreateBook(ctx context.Context, book *models.Book) (
 	return book.ID, nil
 }
 
+func (repo *BookRepository) UpdateBook(ctx context.Context, id int, book *models.Book) (int64, error) {
+	tag, err := repo.pool.Exec(ctx, "UPDATE books SET title=$1, description=$2, author=$3 WHERE id=$4", book.Title, book.Description, book.Author, id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return tag.RowsAffected(), nil
+}
+
 func (repo *BookRepository) DeleteBook(ctx context.Context, id int) (int64, error) {
 	tag, err := repo.pool.Exec(ctx, "DELETE FROM books WHERE id=$1", id)
 

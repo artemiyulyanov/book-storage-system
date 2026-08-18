@@ -79,6 +79,43 @@ func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request)
 	network.RespondJSON(w, http.StatusCreated, map[string]int{"id": id})
 }
 
+func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id, err := network.ParseID(r)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, "Incorrect id!")
+		return
+	}
+
+	var book *models.Book
+	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+		network.RespondError(w, http.StatusBadRequest, "Incorrect request body!")
+		return
+	}
+
+	if err := network.Validate.Struct(book); err != nil {
+		network.RespondValidationError(w, err)
+		return
+	}
+
+	rowsAffected, err := handlers.repo.UpdateBook(ctx, id, book)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if rowsAffected == 0 {
+		network.RespondError(w, http.StatusNotFound, "Book not found!")
+		return
+	}
+
+	book.ID = id
+	network.RespondJSON(w, http.StatusOK, book)
+}
+
 func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -109,6 +146,8 @@ func (handlers *BookHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/books/{id}", handlers.getBook).Methods("GET")
 
 	router.HandleFunc("/books", handlers.createBook).Methods("POST")
+
+	router.HandleFunc("/books/{id}", handlers.updateBook).Methods("PUT")
 
 	router.HandleFunc("/books/{id}", handlers.deleteBook).Methods("DELETE")
 }
