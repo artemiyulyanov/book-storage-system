@@ -26,8 +26,6 @@ WORKDIR /app
 COPY --from=builder /app/user-service/server .
 COPY --from=builder /app/user-service/migrations ./migrations
 
-RUN chmod +x ./server
-
 EXPOSE 8080
 
 CMD ["./server"]
