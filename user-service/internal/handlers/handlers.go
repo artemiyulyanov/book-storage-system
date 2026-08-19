@@ -59,9 +59,7 @@ func (handlers *UserHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/{id}", handlers.getUser).Methods("GET")
 }
 
-func RegisterUserHandlers(router *mux.Router, pool *pgxpool.Pool) *UserHandlers {
-	repo := repository.NewUserRepository(pool)
-
+func RegisterUserHandlers(router *mux.Router, pool *pgxpool.Pool, repo *repository.UserRepository) *UserHandlers {
 	handlers := UserHandlers{
 		repo,
 	}
