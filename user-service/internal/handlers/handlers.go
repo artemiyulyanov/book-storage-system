@@ -55,8 +55,8 @@ func (handlers *UserHandlers) getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (handlers *UserHandlers) registerRoutes(router *mux.Router) {
-	router.HandleFunc("/users", handlers.getUsers).Methods("GET")
-	router.HandleFunc("/users/{id}", handlers.getUser).Methods("GET")
+	router.HandleFunc("/", handlers.getUsers).Methods("GET")
+	router.HandleFunc("/{id}", handlers.getUser).Methods("GET")
 }
 
 func RegisterUserHandlers(router *mux.Router, pool *pgxpool.Pool) *UserHandlers {

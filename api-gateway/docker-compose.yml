@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: api-gateway/Dockerfile
+    container_name: api_gateway
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8081
+      USER_SERVICE_URL: http://user-service:8082
+    ports:
+      - "8080:8080"
+    networks:
+      - book-storage-system-backend
+
+networks:
+  book-storage-system-backend:
+    external: true

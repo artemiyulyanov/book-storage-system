@@ -31,6 +31,6 @@ func main() {
 
 	handlers.RegisterUserHandlers(r, pool)
 
-	log.Println("Listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Println("Listening on :8082")
+	log.Fatal(http.ListenAndServe(":8082", r))
 }

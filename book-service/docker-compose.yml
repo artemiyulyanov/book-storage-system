@@ -19,6 +19,9 @@ services:
       timeout: 5s
       retries: 5
 
+    networks:
+      - book-storage-system-backend
+
   book-service:
     build:
       context: ..
@@ -26,11 +29,17 @@ services:
     container_name: book_service
     environment:
       DATABASE_URL: "postgres://books_user:books_password@books_db:5432/books_db?sslmode=disable"
-    ports:
-      - "8080:8080"
+    expose:
+      - "8081"
     depends_on:
       books_db:
         condition: service_healthy
+    networks:
+      - book-storage-system-backend
 
 volumes:
   postgres_data:
+
+networks:
+  book-storage-system-backend:
+    external: true

@@ -142,14 +142,14 @@ func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request)
 }
 
 func (handlers *BookHandlers) registerRoutes(router *mux.Router) {
-	router.HandleFunc("/books", handlers.getBooks).Methods("GET")
-	router.HandleFunc("/books/{id}", handlers.getBook).Methods("GET")
+	router.HandleFunc("/", handlers.getBooks).Methods("GET")
+	router.HandleFunc("/{id}", handlers.getBook).Methods("GET")
 
-	router.HandleFunc("/books", handlers.createBook).Methods("POST")
+	router.HandleFunc("/", handlers.createBook).Methods("POST")
 
-	router.HandleFunc("/books/{id}", handlers.updateBook).Methods("PUT")
+	router.HandleFunc("/{id}", handlers.updateBook).Methods("PUT")
 
-	router.HandleFunc("/books/{id}", handlers.deleteBook).Methods("DELETE")
+	router.HandleFunc("/{id}", handlers.deleteBook).Methods("DELETE")
 }
 
 func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool) *BookHandlers {
