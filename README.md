@@ -85,7 +85,7 @@ book-storage-system/
 ├── auth-service/
 │   ├── cmd/
 │   ├── internal/
-│   │   ├── clients/            # gRPC-клиент к user-service
+│   │   ├── grpcclients/            # gRPC-клиент к user-service
 │   │   └── handlers/           # логин
 │   └── go.mod
 ├── book-service/
