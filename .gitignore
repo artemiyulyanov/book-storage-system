@@ -1,2 +1,3 @@
 book-service/book-service
 Makefile
+auth-service/.env

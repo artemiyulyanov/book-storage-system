@@ -9,6 +9,7 @@ services:
     environment:
       BOOK_SERVICE_URL: http://book-service:8081
       USER_SERVICE_URL: http://user-service:8082
+      AUTH_SERVICE_URL: http://auth-service:8083
     ports:
       - "8080:8080"
     networks:

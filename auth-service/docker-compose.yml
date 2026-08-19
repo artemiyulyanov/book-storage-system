@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: ..
+      dockerfile: auth-service/Dockerfile
+    container_name: auth_service
+    env_file:
+      - .env
+    expose:
+      - "8083"
+    networks:
+      - book-storage-system-backend
+
+networks:
+  book-storage-system-backend:
+    external: true
