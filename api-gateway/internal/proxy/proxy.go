@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"api-gateway/internal/middleware"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -9,8 +10,9 @@ import (
 )
 
 type Route struct {
-	PathPrefix string
-	Target     *url.URL
+	PathPrefix       string
+	Target           *url.URL
+	ProtectedMethods map[string]bool
 }
 
 type Router struct {
@@ -21,7 +23,7 @@ func NewRouter() *Router {
 	return &Router{}
 }
 
-func (router *Router) RegisterService(pathPrefix, targetURL string) error {
+func (router *Router) RegisterService(pathPrefix, targetURL string, protectedMethods []string) error {
 	target, err := url.Parse(targetURL)
 
 	if err != nil {
@@ -32,22 +34,33 @@ func (router *Router) RegisterService(pathPrefix, targetURL string) error {
 		pathPrefix += "/"
 	}
 
+	methodsSet := make(map[string]bool, len(protectedMethods))
+	if protectedMethods != nil {
+		for _, m := range protectedMethods {
+			methodsSet[m] = true
+		}
+	}
+
 	router.routes = append(router.routes, Route{
-		PathPrefix: pathPrefix,
-		Target:     target,
+		PathPrefix:       pathPrefix,
+		Target:           target,
+		ProtectedMethods: methodsSet,
 	})
 
 	return nil
 }
 
-func (router *Router) Handler() http.Handler {
+func (router *Router) Handler(jwtSecret string) http.Handler {
 	mux := http.NewServeMux()
 
 	for _, route := range router.routes {
 		proxy := newReverseProxy(route.Target)
-
 		trimmedPrefix := strings.TrimSuffix(route.PathPrefix, "/")
-		mux.Handle(route.PathPrefix, http.StripPrefix(trimmedPrefix, proxy))
+
+		var handler http.Handler = http.StripPrefix(trimmedPrefix, proxy)
+		handler = middleware.JWTAuthForMethods(jwtSecret, route.ProtectedMethods)(handler)
+
+		mux.Handle(route.PathPrefix, handler)
 	}
 
 	return mux

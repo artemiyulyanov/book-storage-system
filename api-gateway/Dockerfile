@@ -2,6 +2,7 @@ FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
+COPY common ./common
 
 COPY api-gateway/go.mod api-gateway/go.sum* ./api-gateway/
 

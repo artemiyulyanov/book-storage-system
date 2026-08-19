@@ -14,18 +14,20 @@ func main() {
 	userServiceURL := os.Getenv("USER_SERVICE_URL")
 	authServiceURL := os.Getenv("AUTH_SERVICE_URL")
 
-	if err := router.RegisterService("/api/books", bookServiceURL); err != nil {
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	if err := router.RegisterService("/api/books", bookServiceURL, []string{"PUT", "POST", "DELETE", "PATCH", "OPTIONS"}); err != nil {
 		log.Fatalf("Failed to register service book-service: %v", err)
 	}
 
-	if err := router.RegisterService("/api/users/", userServiceURL); err != nil {
+	if err := router.RegisterService("/api/users/", userServiceURL, []string{"PUT", "POST", "DELETE", "PATCH", "OPTIONS"}); err != nil {
 		log.Fatalf("Failed to register service user-service: %v", err)
 	}
 
-	if err := router.RegisterService("/api/auth/", authServiceURL); err != nil {
+	if err := router.RegisterService("/api/auth/", authServiceURL, nil); err != nil {
 		log.Fatalf("Failed to register service auth-service: %v", err)
 	}
 
 	log.Println("Listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", router.Handler()))
+	log.Fatal(http.ListenAndServe(":8080", router.Handler(jwtSecret)))
 }

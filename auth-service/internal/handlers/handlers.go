@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"auth-service/internal/grpcclients"
+	"common/auth"
 	"common/network"
 	"common/network/requests"
 	"encoding/json"
 	"net/http"
+	"os"
+	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -45,7 +49,18 @@ func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	network.RespondJSON(w, http.StatusOK, user)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		network.RespondError(w, http.StatusUnauthorized, "Incorrect email or password")
+		return
+	}
+
+	token, err := auth.GenerateToken(user.Id, os.Getenv("JWT_SECRET"), 24*time.Hour)
+	if err != nil {
+		network.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
+		return
+	}
+
+	network.RespondJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
 func (handlers *AuthHandlers) registerRoutes(router *mux.Router) {
