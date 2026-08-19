@@ -120,7 +120,7 @@ book-storage-system/
 
 ### Регистрация и логин
 
-1. Клиент отправляет `POST /api/users` (регистрация) в `user-service` через gateway — пароль хешируется через bcrypt перед сохранением, в открытом виде нигде не хранится.
+1. Клиент отправляет `POST /api/auth/register` (регистрация) в `auth-service` через gateway — пароль хешируется через bcrypt перед сохранением, в открытом виде нигде не хранится.
 2. Для логина клиент идёт в `auth-service` (`POST /api/auth/login`).
 3. `auth-service` запрашивает у `user-service` данные пользователя по email — **по gRPC**, а не по HTTP, и не напрямую в БД (`auth-service` не имеет доступа к `users_db`).
 4. `auth-service` сверяет присланный пароль с полученным хешем (`bcrypt.CompareHashAndPassword`) и, если всё совпало, выпускает JWT.
@@ -170,7 +170,7 @@ migrate create -ext sql -dir book-service/migrations -seq add_book_status
 
 | Метод | Путь | Авторизация | Описание |
 |---|---|---|---|
-| `POST` | `/api/users` | нет | Регистрация пользователя |
+| `POST` | `/api/auth/register` | нет | Регистрация пользователя |
 | `POST` | `/api/auth/login` | нет | Логин, выдаёт JWT |
 | `GET` | `/api/books` | нет | Список книг |
 | `GET` | `/api/books/{id}` | нет | Книга по ID |
