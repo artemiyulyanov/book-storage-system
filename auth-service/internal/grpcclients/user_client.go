@@ -3,6 +3,7 @@ package grpcclients
 import (
 	"context"
 
+	"common/network/requests"
 	pb "common/proto/user"
 
 	"google.golang.org/grpc"
@@ -32,4 +33,14 @@ func (c *UserClient) Close() error {
 
 func (c *UserClient) GetUserByEmail(ctx context.Context, email string) (*pb.UserResponse, error) {
 	return c.client.GetUserByEmail(ctx, &pb.GetUserByEmailRequest{Email: email})
+}
+
+func (c *UserClient) CreateUser(ctx context.Context, req *requests.RegisterRequest) (*pb.UserCreatedResponse, error) {
+	return c.client.CreateUser(ctx, &pb.CreateUserRequest{
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		Email:          req.Email,
+		Password:       req.Password,
+		PasswordRepeat: req.PasswordRepeat,
+	})
 }

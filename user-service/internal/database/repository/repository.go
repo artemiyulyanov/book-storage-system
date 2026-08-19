@@ -1,8 +1,12 @@
 package repository
 
 import (
+	"common/auth"
 	"common/models"
+	"common/network/errors"
 	"context"
+
+	pb "common/proto/user"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -54,6 +58,28 @@ func (repo *UserRepository) GetUserByEmail(ctx context.Context, email string) (*
 	}
 
 	return &user, nil
+}
+
+func (repo *UserRepository) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (int64, error) {
+	if !auth.PasswordsMatch(req.Password, req.PasswordRepeat) {
+		return 0, errors.ErrPasswordsMismatch
+	}
+
+	passwordHash, err := auth.HashPassword(req.Password)
+	if err != nil {
+		return 0, err
+	}
+
+	var id int64
+
+	err = repo.pool.QueryRow(ctx, "INSERT INTO users (first_name, last_name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING id", req.FirstName, req.LastName, req.Email, passwordHash).
+		Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 func NewUserRepository(pool *pgxpool.Pool) *UserRepository {

@@ -11,6 +11,7 @@ import (
 )
 
 var Validate = validator.New()
+var ErrMissingUserID = errors.New("missing X-User-Id header")
 
 func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -57,4 +58,14 @@ func validationMessage(fe validator.FieldError) string {
 func ParseID(r *http.Request) (int64, error) {
 	vars := mux.Vars(r)
 	return strconv.ParseInt(vars["id"], 10, 64)
+}
+
+func ParseUserID(r *http.Request) (int64, error) {
+	userIDHeader := r.Header.Get("X-User-Id")
+
+	if userIDHeader == "" {
+		return 0, ErrMissingUserID
+	}
+
+	return strconv.ParseInt(userIDHeader, 10, 64)
 }

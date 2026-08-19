@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"book-service/internal/database/repository"
-	"common/models"
 	"common/network"
+	"common/network/requests"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -57,19 +57,26 @@ func (handlers *BookHandlers) getBook(w http.ResponseWriter, r *http.Request) {
 
 func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	userId, err := network.ParseUserID(r)
 
-	var book *models.Book
-	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var req *requests.BookCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		network.RespondError(w, http.StatusBadRequest, "Incorrect request body!")
 		return
 	}
 
-	if err := network.Validate.Struct(book); err != nil {
+	if err := network.Validate.Struct(req); err != nil {
 		network.RespondValidationError(w, err)
 		return
 	}
 
-	id, err := handlers.repo.CreateBook(ctx, book)
+	req.AuthorID = userId
+	id, err := handlers.repo.CreateBook(ctx, req)
 
 	if err != nil {
 		network.RespondError(w, http.StatusBadRequest, err.Error())
@@ -81,6 +88,12 @@ func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request)
 
 func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	userId, err := network.ParseUserID(r)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	id, err := network.ParseID(r)
 
@@ -89,18 +102,19 @@ func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var book *models.Book
-	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+	var req *requests.BookUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		network.RespondError(w, http.StatusBadRequest, "Incorrect request body!")
 		return
 	}
 
-	if err := network.Validate.Struct(book); err != nil {
+	if err := network.Validate.Struct(req); err != nil {
 		network.RespondValidationError(w, err)
 		return
 	}
 
-	rowsAffected, err := handlers.repo.UpdateBook(ctx, id, book)
+	req.AuthorID = userId
+	rowsAffected, err := handlers.repo.UpdateBook(ctx, id, req)
 
 	if err != nil {
 		network.RespondError(w, http.StatusBadRequest, err.Error())
@@ -112,12 +126,18 @@ func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	book.ID = id
-	network.RespondJSON(w, http.StatusOK, book)
+	req.ID = id
+	network.RespondJSON(w, http.StatusOK, req)
 }
 
 func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	userId, err := network.ParseUserID(r)
+
+	if err != nil {
+		network.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	id, err := network.ParseID(r)
 
@@ -126,7 +146,7 @@ func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	rowsAffected, err := handlers.repo.DeleteBook(ctx, id)
+	rowsAffected, err := handlers.repo.DeleteBook(ctx, id, userId)
 
 	if err != nil {
 		network.RespondError(w, http.StatusBadRequest, err.Error())

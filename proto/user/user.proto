@@ -6,14 +6,27 @@ option go_package = "common/proto/user";
 
 service UserService {
   rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse);
+  rpc CreateUser(CreateUserRequest) returns (UserCreatedResponse);
 }
 
 message GetUserByEmailRequest {
   string email = 1;
 }
 
+message CreateUserRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+  string password = 4;
+  string password_repeat = 5;
+}
+
 message UserResponse {
   int64 id = 1;
   string email = 2;
   string password_hash = 3;
+}
+
+message UserCreatedResponse {
+  int64 id = 1;
 }
