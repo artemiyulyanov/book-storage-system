@@ -18,6 +18,21 @@ import (
 	"google.golang.org/grpc"
 )
 
+func runGRPCServer(repo *repository.UserRepository) {
+	lis, err := net.Listen("tcp", ":9090")
+	if err != nil {
+		log.Fatalf("failed to listen on :9090: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterUserServiceServer(grpcServer, grpcserver.NewUserServer(repo))
+
+	log.Println("gRPC listening on :9090")
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("grpc server failed: %v", err)
+	}
+}
+
 func main() {
 	connectionString := os.Getenv("DATABASE_URL")
 
@@ -35,20 +50,7 @@ func main() {
 
 	repo := repository.NewUserRepository(pool)
 
-	go func() {
-		lis, err := net.Listen("tcp", ":9090")
-		if err != nil {
-			log.Fatalf("failed to listen on :9090: %v", err)
-		}
-
-		grpcServer := grpc.NewServer()
-		pb.RegisterUserServiceServer(grpcServer, grpcserver.NewUserServer(repo))
-
-		log.Println("gRPC listening on :9090")
-		if err := grpcServer.Serve(lis); err != nil {
-			log.Fatalf("grpc server failed: %v", err)
-		}
-	}()
+	go runGRPCServer(repo)
 
 	r := mux.NewRouter()
 	handlers.RegisterUserHandlers(r, pool, repo)
