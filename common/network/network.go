@@ -1,6 +1,7 @@
 package network
 
 import (
+	"common/models"
 	"encoding/json"
 	"errors"
 	"net"
@@ -13,6 +14,7 @@ import (
 
 var Validate = validator.New()
 var ErrMissingUserID = errors.New("missing X-User-Id header")
+var ErrMissingUserRole = errors.New("missing X-User-Role header")
 
 func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -69,6 +71,16 @@ func ParseUserID(r *http.Request) (int64, error) {
 	}
 
 	return strconv.ParseInt(userIDHeader, 10, 64)
+}
+
+func ParseUserRole(r *http.Request) (models.UserRole, error) {
+	userRoleHeader := r.Header.Get("X-User-Role")
+
+	if userRoleHeader == "" {
+		return models.ROLE_USER, ErrMissingUserRole
+	}
+
+	return models.UserRole(userRoleHeader), nil
 }
 
 func ParseClientIP(r *http.Request) string {

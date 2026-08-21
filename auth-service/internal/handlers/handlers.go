@@ -4,8 +4,10 @@ import (
 	"auth-service/internal/grpcclients"
 	"common/auth"
 	"common/events"
+	"common/models"
 	"common/network"
 	"common/network/requests"
+	kafkaPublisher "common/publisher"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -18,8 +20,8 @@ import (
 )
 
 type AuthHandlers struct {
-	userClient    *grpcclients.UserClient
-	kafkaProducer *events.Producer
+	kafkaPublisher *kafkaPublisher.KafkaAsyncPublisher
+	userClient     *grpcclients.UserClient
 }
 
 func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +57,7 @@ func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.Id, os.Getenv("JWT_SECRET"), 24*time.Hour)
+	token, err := auth.GenerateToken(user.Id, models.UserRole(user.Role), os.Getenv("JWT_SECRET"), 24*time.Hour)
 	if err != nil {
 		network.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
 		return
@@ -63,7 +65,7 @@ func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
 
 	clientIP := network.ParseClientIP(r)
 
-	go handlers.kafkaProducer.Publish(ctx, events.UserLoggedIn, user.Id, events.UserLoggedInPayload{
+	go handlers.kafkaPublisher.PublishAsync(events.UserLoggedIn, user.Id, events.UserLoggedInPayload{
 		IP: clientIP,
 	})
 
@@ -103,7 +105,7 @@ func (handlers *AuthHandlers) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.GenerateToken(res.Id, os.Getenv("JWT_SECRET"), 24*time.Hour)
+	token, err := auth.GenerateToken(res.Id, models.ROLE_USER, os.Getenv("JWT_SECRET"), 24*time.Hour)
 	if err != nil {
 		network.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
 		return
@@ -111,7 +113,7 @@ func (handlers *AuthHandlers) register(w http.ResponseWriter, r *http.Request) {
 
 	clientIP := network.ParseClientIP(r)
 
-	go handlers.kafkaProducer.Publish(ctx, events.UserRegistered, res.Id, events.UserRegisteredPayload{
+	go handlers.kafkaPublisher.PublishAsync(events.UserRegistered, res.Id, events.UserRegisteredPayload{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Email:     req.Email,
@@ -128,8 +130,8 @@ func (handlers *AuthHandlers) registerRoutes(router *mux.Router) {
 
 func RegisterAuthHandlers(router *mux.Router, userClient *grpcclients.UserClient, kafkaProducer *events.Producer) *AuthHandlers {
 	handlers := AuthHandlers{
-		userClient:    userClient,
-		kafkaProducer: kafkaProducer,
+		kafkaPublisher: kafkaPublisher.NewKafkaAsyncPublisher(kafkaProducer),
+		userClient:     userClient,
 	}
 
 	handlers.registerRoutes(router)

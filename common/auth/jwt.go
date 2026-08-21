@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"common/models"
 	"errors"
 	"time"
 
@@ -10,13 +11,15 @@ import (
 var ErrInvalidToken = errors.New("invalid token")
 
 type Claims struct {
-	UserID int64 `json:"user_id"`
+	UserID int64           `json:"user_id"`
+	Role   models.UserRole `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID int64, secret string, ttl time.Duration) (string, error) {
+func GenerateToken(userID int64, role models.UserRole, secret string, ttl time.Duration) (string, error) {
 	claims := Claims{
 		UserID: userID,
+		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

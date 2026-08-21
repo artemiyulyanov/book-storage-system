@@ -8,9 +8,17 @@ type Book struct {
 }
 
 type User struct {
-	ID           int64  `json:"id" db:"id"`
-	FirstName    string `json:"first_name" db:"first_name" validate:"required,max=100"`
-	LastName     string `json:"last_name" db:"last_name" validate:"required,max=100"`
-	Email        string `json:"email" db:"email" validate:"required,email,max=200"`
-	PasswordHash string `json:"-" db:"password_hash"`
+	ID           int64    `json:"id" db:"id"`
+	Role         UserRole `json:"role" db:"role"`
+	FirstName    string   `json:"first_name" db:"first_name" validate:"required,max=100"`
+	LastName     string   `json:"last_name" db:"last_name" validate:"required,max=100"`
+	Email        string   `json:"email" db:"email" validate:"required,email,max=200"`
+	PasswordHash string   `json:"-" db:"password_hash"`
 }
+
+type UserRole string
+
+const (
+	ROLE_USER  UserRole = "ROLE_USER"
+	ROLE_ADMIN UserRole = "ROLE_ADMIN"
+)

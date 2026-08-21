@@ -42,6 +42,7 @@ func (s *UserServer) GetUserByEmail(ctx context.Context, req *pb.GetUserByEmailR
 	return &pb.UserResponse{
 		Id:           user.ID,
 		Email:        user.Email,
+		Role:         string(user.Role),
 		PasswordHash: user.PasswordHash,
 	}, nil
 }

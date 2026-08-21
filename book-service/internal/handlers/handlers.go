@@ -10,13 +10,15 @@ import (
 	"errors"
 	"net/http"
 
+	kafkaPublisher "common/publisher"
+
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type BookHandlers struct {
-	repo          *repository.BookRepository
-	kafkaProducer *events.Producer
+	kafkaPublisher *kafkaPublisher.KafkaAsyncPublisher
+	repo           *repository.BookRepository
 }
 
 func (handlers *BookHandlers) getBooks(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +87,7 @@ func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	go handlers.kafkaProducer.Publish(ctx, events.BookCreated, id, events.BookCreatedPayload{
+	go handlers.kafkaPublisher.PublishAsync(events.BookCreated, id, events.BookCreatedPayload{
 		Title:       req.Title,
 		Description: req.Description,
 		AuthorID:    userId,
@@ -134,7 +136,7 @@ func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	go handlers.kafkaProducer.Publish(ctx, events.BookUpdated, id, events.BookUpdatedPayload{
+	go handlers.kafkaPublisher.PublishAsync(events.BookUpdated, id, events.BookUpdatedPayload{
 		Title:       req.Title,
 		Description: req.Description,
 	})
@@ -171,7 +173,7 @@ func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	go handlers.kafkaProducer.Publish(ctx, events.BookDeleted, id, events.BookDeletedPayload{})
+	go handlers.kafkaPublisher.PublishAsync(events.BookDeleted, id, events.BookDeletedPayload{})
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -191,8 +193,8 @@ func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool, kafkaProducer 
 	repo := repository.NewBookRepository(pool)
 
 	handlers := BookHandlers{
-		repo,
-		kafkaProducer,
+		kafkaPublisher: kafkaPublisher.NewKafkaAsyncPublisher(kafkaProducer),
+		repo:           repo,
 	}
 
 	handlers.registerRoutes(router)

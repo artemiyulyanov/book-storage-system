@@ -24,7 +24,8 @@ message CreateUserRequest {
 message UserResponse {
   int64 id = 1;
   string email = 2;
-  string password_hash = 3;
+  string role = 3;
+  string password_hash = 4;
 }
 
 message UserCreatedResponse {

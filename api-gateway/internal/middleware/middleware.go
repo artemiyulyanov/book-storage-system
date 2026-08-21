@@ -32,6 +32,7 @@ func JWTAuthForMethods(secret string, protectedMethods map[string]bool) func(htt
 			}
 
 			r.Header.Set("X-User-Id", strconv.FormatInt(claims.UserID, 10))
+			r.Header.Set("X-User-Role", string(claims.Role))
 
 			next.ServeHTTP(w, r)
 		})

@@ -42,8 +42,8 @@ func (repo *UserRepository) GetUsers(ctx context.Context) ([]models.User, error)
 func (repo *UserRepository) GetUser(ctx context.Context, id int64) (*models.User, error) {
 	var user models.User
 
-	err := repo.pool.QueryRow(ctx, "SELECT id, first_name, last_name, email, password_hash FROM users WHERE id=$1", id).
-		Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
+	err := repo.pool.QueryRow(ctx, "SELECT id, role, first_name, last_name, email, password_hash FROM users WHERE id=$1", id).
+		Scan(&user.ID, &user.Role, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
 
 	if err != nil {
 		return nil, err
@@ -55,8 +55,8 @@ func (repo *UserRepository) GetUser(ctx context.Context, id int64) (*models.User
 func (repo *UserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
 
-	err := repo.pool.QueryRow(ctx, "SELECT id, first_name, last_name, email, password_hash FROM users WHERE email=$1", email).
-		Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
+	err := repo.pool.QueryRow(ctx, "SELECT id, role, first_name, last_name, email, password_hash FROM users WHERE email=$1", email).
+		Scan(&user.ID, &user.Role, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash)
 
 	if err != nil {
 		return nil, err
