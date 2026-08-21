@@ -5,9 +5,9 @@ services:
     image: clickhouse/clickhouse-server:24.8
     container_name: clickhouse
     environment:
-      CLICKHOUSE_USER: events_clickhouse_user
-      CLICKHOUSE_PASSWORD: clickhouse_password
-      CLICKHOUSE_DB: events_db
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     healthcheck:
@@ -24,8 +24,8 @@ services:
       dockerfile: event-service/Dockerfile
     container_name: event-service
     environment:
-      - KAFKA_BROKERS=kafka:9092
-      - CLICKHOUSE_DSN=clickhouse://events_clickhouse_user:clickhouse_password@clickhouse:9000/events_db
+      KAFKA_BROKERS: kafka:9092
+      CLICKHOUSE_DSN: ${CLICKHOUSE_DSN}
     depends_on:
       clickhouse:
         condition: service_healthy

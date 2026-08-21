@@ -1,4 +1,6 @@
-book-service/book-service
-Makefile
 auth-service/.env
+book-service/.env
+user-service/.env
+event-service/.env
 api-gateway/.env
+infra/.env

@@ -6,15 +6,15 @@ services:
     container_name: users_db
 
     environment:
-      POSTGRES_DB: users_db
-      POSTGRES_USER: users_user
-      POSTGRES_PASSWORD: users_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U users_user -d users_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,8 +28,8 @@ services:
       dockerfile: user-service/Dockerfile
     container_name: user_service
     environment:
-      DATABASE_URL: "postgres://users_user:users_password@users_db:5432/users_db?sslmode=disable"
-      KAFKA_PRODUCERS: "kafka:9092"
+      DATABASE_URL: ${DATABASE_URL}
+      KAFKA_PRODUCERS: kafka:9092
     expose:
       - "8082"
     depends_on:

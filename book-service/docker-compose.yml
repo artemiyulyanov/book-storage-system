@@ -6,15 +6,15 @@ services:
     container_name: books_db
 
     environment:
-      POSTGRES_DB: books_db
-      POSTGRES_USER: books_user
-      POSTGRES_PASSWORD: books_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U books_user -d books_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,7 +28,7 @@ services:
       dockerfile: book-service/Dockerfile
     container_name: book_service
     environment:
-      DATABASE_URL: "postgres://books_user:books_password@books_db:5432/books_db?sslmode=disable"
+      DATABASE_URL: ${DATABASE_URL}
       KAFKA_BROKERS: "kafka:9092"
     expose:
       - "8081"
