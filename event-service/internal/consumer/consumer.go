@@ -15,9 +15,11 @@ import (
 var topics = []string{
 	string(events.BookCreated),
 	string(events.BookUpdated),
+	string(events.BookDeleted),
 	string(events.UserRegistered),
 	string(events.UserUpdated),
 	string(events.UserLoggedIn),
+	string(events.UserDeleted),
 }
 
 const (
