@@ -29,6 +29,7 @@ services:
     container_name: book_service
     environment:
       DATABASE_URL: "postgres://books_user:books_password@books_db:5432/books_db?sslmode=disable"
+      KAFKA_BROKERS: "kafka:9092"
     expose:
       - "8081"
     depends_on:

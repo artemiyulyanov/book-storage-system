@@ -8,8 +8,13 @@ import (
 
 	pb "common/proto/user"
 
+	apperrors "common/network/errors"
+	stderrors "errors"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserRepository struct {
@@ -76,6 +81,10 @@ func (repo *UserRepository) CreateUser(ctx context.Context, req *pb.CreateUserRe
 		Scan(&id)
 
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if stderrors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, apperrors.ErrEmailTaken
+		}
 		return 0, err
 	}
 

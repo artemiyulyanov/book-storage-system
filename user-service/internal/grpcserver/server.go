@@ -9,7 +9,7 @@ import (
 
 	"user-service/internal/database/repository"
 
-	repositoryErrors "common/network/errors"
+	apperrors "common/network/errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -50,10 +50,14 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 	id, err := s.repo.CreateUser(ctx, req)
 
 	if err != nil {
-		if errors.Is(err, repositoryErrors.ErrPasswordsMismatch) {
+		switch {
+		case errors.Is(err, apperrors.ErrPasswordsMismatch):
 			return nil, status.Error(codes.InvalidArgument, err.Error())
+		case errors.Is(err, apperrors.ErrEmailTaken):
+			return nil, status.Error(codes.AlreadyExists, err.Error())
+		default:
+			return nil, status.Error(codes.Internal, err.Error())
 		}
-		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.UserCreatedResponse{Id: id}, nil

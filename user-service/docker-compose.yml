@@ -29,6 +29,7 @@ services:
     container_name: user_service
     environment:
       DATABASE_URL: "postgres://users_user:users_password@users_db:5432/users_db?sslmode=disable"
+      KAFKA_PRODUCERS: "kafka:9092"
     expose:
       - "8082"
     depends_on:

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"book-service/internal/database/repository"
+	"common/events"
 	"common/network"
 	"common/network/requests"
 	"database/sql"
@@ -14,7 +15,8 @@ import (
 )
 
 type BookHandlers struct {
-	repo *repository.BookRepository
+	repo          *repository.BookRepository
+	kafkaProducer *events.Producer
 }
 
 func (handlers *BookHandlers) getBooks(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +85,12 @@ func (handlers *BookHandlers) createBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	go handlers.kafkaProducer.Publish(ctx, events.BookCreated, id, events.BookCreatedPayload{
+		Title:       req.Title,
+		Description: req.Description,
+		AuthorID:    userId,
+	})
+
 	network.RespondJSON(w, http.StatusCreated, map[string]int64{"id": id})
 }
 
@@ -126,6 +134,11 @@ func (handlers *BookHandlers) updateBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	go handlers.kafkaProducer.Publish(ctx, events.BookUpdated, id, events.BookUpdatedPayload{
+		Title:       req.Title,
+		Description: req.Description,
+	})
+
 	req.ID = id
 	network.RespondJSON(w, http.StatusOK, req)
 }
@@ -158,6 +171,8 @@ func (handlers *BookHandlers) deleteBook(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	go handlers.kafkaProducer.Publish(ctx, events.BookDeleted, id, events.BookDeletedPayload{})
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -172,11 +187,12 @@ func (handlers *BookHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/{id}", handlers.deleteBook).Methods("DELETE")
 }
 
-func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool) *BookHandlers {
+func RegisterBookHandlers(router *mux.Router, pool *pgxpool.Pool, kafkaProducer *events.Producer) *BookHandlers {
 	repo := repository.NewBookRepository(pool)
 
 	handlers := BookHandlers{
 		repo,
+		kafkaProducer,
 	}
 
 	handlers.registerRoutes(router)

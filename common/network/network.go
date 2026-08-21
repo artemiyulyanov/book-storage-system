@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"strconv"
 
@@ -68,4 +69,16 @@ func ParseUserID(r *http.Request) (int64, error) {
 	}
 
 	return strconv.ParseInt(userIDHeader, 10, 64)
+}
+
+func ParseClientIP(r *http.Request) string {
+	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+		return ip
+	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }

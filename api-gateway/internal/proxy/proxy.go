@@ -3,6 +3,7 @@ package proxy
 import (
 	"api-gateway/internal/middleware"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -74,6 +75,11 @@ func newReverseProxy(target *url.URL) *httputil.ReverseProxy {
 		originalDirector(req)
 		req.Host = target.Host
 		req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+
+		clientIP, _, err := net.SplitHostPort(req.RemoteAddr)
+		if err == nil {
+			req.Header.Set("X-Forwarded-For", clientIP)
+		}
 	}
 
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {

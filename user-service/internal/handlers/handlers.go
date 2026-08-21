@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"user-service/internal/database/repository"
 
+	"common/events"
 	"common/network"
 
 	"github.com/gorilla/mux"
@@ -13,7 +14,8 @@ import (
 )
 
 type UserHandlers struct {
-	repo *repository.UserRepository
+	repo          *repository.UserRepository
+	kafkaProducer *events.Producer
 }
 
 func (handlers *UserHandlers) getUsers(w http.ResponseWriter, r *http.Request) {
@@ -59,9 +61,10 @@ func (handlers *UserHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/{id}", handlers.getUser).Methods("GET")
 }
 
-func RegisterUserHandlers(router *mux.Router, pool *pgxpool.Pool, repo *repository.UserRepository) *UserHandlers {
+func RegisterUserHandlers(router *mux.Router, pool *pgxpool.Pool, repo *repository.UserRepository, kafkaProducer *events.Producer) *UserHandlers {
 	handlers := UserHandlers{
 		repo,
+		kafkaProducer,
 	}
 
 	handlers.registerRoutes(router)

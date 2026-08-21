@@ -2,11 +2,13 @@ package main
 
 import (
 	"common/database"
+	"common/events"
 	"context"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"user-service/internal/database/repository"
 	"user-service/internal/grpcserver"
@@ -52,8 +54,11 @@ func main() {
 
 	go runGRPCServer(repo)
 
+	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
+	kafkaProducer := events.NewProducer(brokers)
+
 	r := mux.NewRouter()
-	handlers.RegisterUserHandlers(r, pool, repo)
+	handlers.RegisterUserHandlers(r, pool, repo, kafkaProducer)
 
 	log.Println("Listening on :8082")
 	log.Fatal(http.ListenAndServe(":8082", r))

@@ -3,6 +3,7 @@ package handlers
 import (
 	"auth-service/internal/grpcclients"
 	"common/auth"
+	"common/events"
 	"common/network"
 	"common/network/requests"
 	"encoding/json"
@@ -17,7 +18,8 @@ import (
 )
 
 type AuthHandlers struct {
-	userClient *grpcclients.UserClient
+	userClient    *grpcclients.UserClient
+	kafkaProducer *events.Producer
 }
 
 func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +61,12 @@ func (handlers *AuthHandlers) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientIP := network.ParseClientIP(r)
+
+	go handlers.kafkaProducer.Publish(ctx, events.UserLoggedIn, user.Id, events.UserLoggedInPayload{
+		IP: clientIP,
+	})
+
 	network.RespondJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
@@ -80,9 +88,15 @@ func (handlers *AuthHandlers) register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, ok := status.FromError(err)
 
-		if ok && st.Code() == codes.InvalidArgument {
-			network.RespondError(w, http.StatusConflict, "Passwords do not match!")
-			return
+		if ok {
+			switch st.Code() {
+			case codes.InvalidArgument:
+				network.RespondError(w, http.StatusBadRequest, "Passwords do not match!")
+				return
+			case codes.AlreadyExists:
+				network.RespondError(w, http.StatusConflict, "Email already registered!")
+				return
+			}
 		}
 
 		network.RespondError(w, http.StatusBadGateway, "Failed to reach user-service")
@@ -95,6 +109,15 @@ func (handlers *AuthHandlers) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientIP := network.ParseClientIP(r)
+
+	go handlers.kafkaProducer.Publish(ctx, events.UserRegistered, res.Id, events.UserRegisteredPayload{
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+		IP:        clientIP,
+	})
+
 	network.RespondJSON(w, http.StatusCreated, map[string]string{"token": token})
 }
 
@@ -103,9 +126,10 @@ func (handlers *AuthHandlers) registerRoutes(router *mux.Router) {
 	router.HandleFunc("/register", handlers.register).Methods("POST")
 }
 
-func RegisterAuthHandlers(router *mux.Router, userClient *grpcclients.UserClient) *AuthHandlers {
+func RegisterAuthHandlers(router *mux.Router, userClient *grpcclients.UserClient, kafkaProducer *events.Producer) *AuthHandlers {
 	handlers := AuthHandlers{
-		userClient: userClient,
+		userClient:    userClient,
+		kafkaProducer: kafkaProducer,
 	}
 
 	handlers.registerRoutes(router)
